@@ -25,24 +25,50 @@ npm run build      # outputs the static site to dist/
 npm run preview    # serve the production build locally
 ```
 
-## Deploying to GitHub Pages (automatic)
+## Deploying to Cloudflare Pages (automatic)
 
-This repo includes `.github/workflows/deploy.yml`, which builds the site and deploys
-it to GitHub Pages every time you push to `main`.
+There are two ways to wire this up. Pick one.
+
+### Option A — Cloudflare's native Git integration (simplest, no secrets)
+
+Cloudflare builds and deploys the site itself whenever you push — you don't need
+the `.github/workflows/deploy.yml` file at all with this option (feel free to delete
+it).
+
+1. Push this project to a new GitHub repository.
+2. In the [Cloudflare dashboard](https://dash.cloudflare.com) go to **Workers & Pages
+   → Create → Pages → Connect to Git**, and pick this repo.
+3. Set the build settings:
+   - **Build command:** `npm run build`
+   - **Build output directory:** `dist`
+4. Save and deploy.
+
+That's it. Every future push to `main` triggers a new build + deploy automatically,
+and you get preview deployments on other branches/PRs for free.
+
+### Option B — GitHub Actions + Cloudflare (keeps the deploy step in your repo)
+
+This repo's `.github/workflows/deploy.yml` builds the site in GitHub Actions and
+pushes the result to Cloudflare Pages using [`cloudflare/pages-action`](https://github.com/cloudflare/pages-action).
+Use this if you want the build/deploy logic version-controlled in the repo, or want
+CI checks to run before deploying.
 
 **One-time setup:**
 
 1. Push this project to a new GitHub repository.
-2. In the repo, go to **Settings → Pages**.
-3. Under **Build and deployment → Source**, choose **GitHub Actions**.
-4. Push to `main` (or run the workflow manually from the **Actions** tab).
-
-That's it — the workflow figures out the correct base path from your repository name
-automatically, so the built site's asset URLs work at:
-
-```
-https://<your-username>.github.io/<repo-name>/
-```
+2. In Cloudflare, go to **Workers & Pages → Create → Pages → Connect to Git** *or*
+   **Upload assets**, and create a project named `gallery-app` (or update
+   `projectName` in `deploy.yml` to match whatever you name it) — this just
+   registers the project once, so the Action has somewhere to deploy to. If you
+   already created the project via Option A, you can reuse it (just remove the Git
+   connection in the project's settings so it doesn't double-deploy).
+3. Get a Cloudflare **API token** (Cloudflare dashboard → My Profile → API Tokens →
+   Create Token → use the "Edit Cloudflare Workers" template, which includes Pages
+   permissions) and your **Account ID** (right sidebar of any domain overview page).
+4. In your GitHub repo, go to **Settings → Secrets and variables → Actions** and add:
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+5. Push to `main` (or run the workflow manually from the **Actions** tab).
 
 **After the one-time setup**, the whole workflow going forward is just:
 
@@ -55,7 +81,8 @@ git push
 ```
 
 The push triggers the Action, which builds the site (auto-discovering the new
-images) and republishes it — no manual build or deploy step needed.
+images) and republishes it to your `*.pages.dev` URL (or custom domain) — no manual
+build or deploy step needed.
 
 ## Project structure
 
@@ -66,6 +93,6 @@ images) and republishes it — no manual build or deploy step needed.
 │   ├── main.js         # discovers images + renders gallery/lightbox
 │   └── style.css
 ├── index.html
-├── vite.config.js       # base path is set via VITE_BASE_PATH env var
-└── .github/workflows/deploy.yml   # build + deploy on every push to main
+├── vite.config.js
+└── .github/workflows/deploy.yml   # optional — builds + deploys to Cloudflare Pages via GitHub Actions (Option B)
 ```

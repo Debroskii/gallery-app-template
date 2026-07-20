@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 
-// Base path is injected by the GitHub Actions workflow so the built
-// site works correctly at https://<user>.github.io/<repo>/
-// Locally it defaults to '/' so `npm run dev` / `npm run preview` just work.
+// Cloudflare Pages serves the site from the root of its domain
+// (e.g. https://gallery-app.pages.dev/ or your custom domain),
+// so no subpath base is needed here.
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || '/',
+  base: '/',
 });
