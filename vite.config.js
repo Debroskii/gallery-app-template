@@ -5,4 +5,5 @@ import { defineConfig } from 'vite';
 // so no subpath base is needed here.
 export default defineConfig({
   base: '/',
+  plugins: [],
 });
